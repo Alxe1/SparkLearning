@@ -96,7 +96,7 @@ class TestPipeline(spark : SparkSession){
     val model: PipelineModel = pipeline.fit(training)
 
     // 保存模型及没有拟合数据的pipeline
-    // TODO: 注意在菜单栏Run的edit configurations中设置VM options参数-DHADOOP_USER_HOME=root -Dspark.master=spark://192.168.8.100:8080
+    // TODO: 注意在菜单栏Run的edit configurations中设置VM options参数-DHADOOP_USER_HOME=root -Dspark.master=spark://centos03:8080
     model.write.overwrite().save("hdfs://centos03:9000/logistic/spark-logistic-regression-model")
     pipeline.write.overwrite().save("hdfs://centos03:9000/logistic/unfit-lr-model")
 
