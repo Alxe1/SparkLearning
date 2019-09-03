@@ -2,7 +2,7 @@ package com.littlely.spark.machinelearning
 
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.{Pipeline, PipelineModel}
-import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier, GBTClassificationModel, GBTClassifier, LogisticRegression, LogisticRegressionModel, MultilayerPerceptronClassificationModel, MultilayerPerceptronClassifier, RandomForestClassificationModel, RandomForestClassifier}
+import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier, GBTClassificationModel, GBTClassifier, LogisticRegression, LogisticRegressionModel, MultilayerPerceptronClassificationModel, MultilayerPerceptronClassifier, NaiveBayes, NaiveBayesModel, OneVsRest, OneVsRestModel, RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, StringIndexerModel, VectorIndexer, VectorIndexerModel}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
@@ -16,7 +16,7 @@ object Classifications {
     val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
 
     val classifications: Classifications = new Classifications(spark)
-    classifications.getMultiPerceptronClassifier()
+    classifications.getNaiveBayes()
   }
 }
 
@@ -184,6 +184,39 @@ class Classifications(spark : SparkSession){
 //    val predictionAndLabels: DataFrame = result.select("prediction", "label")
     val evaluator: MulticlassClassificationEvaluator = new MulticlassClassificationEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("accuracy")
     println("Test set Accuracy: " + evaluator.evaluate(result))
+  }
+
+  // OneVsRest classifier
+  def getOneVsRest(): Unit ={
+
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_multiclass_classification_data.txt")
+    val Array(train, test): Array[Dataset[Row]] = data.randomSplit(Array(0.8, 0.2))
+
+    val classifier: LogisticRegression = new LogisticRegression().setMaxIter(10).setTol(1E-6).setFitIntercept(true)
+
+    val ovr: OneVsRest = new OneVsRest().setClassifier(classifier)
+    val ovrModel: OneVsRestModel = ovr.fit(train)
+
+    val predictions: DataFrame = ovrModel.transform(test)
+    predictions.show(5, false)
+
+    val evaluator: MulticlassClassificationEvaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy")
+    val acc: Double = evaluator.evaluate(predictions)
+    println(s"Test Error: ${1 - acc}")
+  }
+
+  def getNaiveBayes(): Unit ={
+
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_libsvm_data.txt")
+    val Array(trainingData, testData): Array[Dataset[Row]] = data.randomSplit(Array(0.7, 0.3), seed=1234L)
+
+    val model: NaiveBayesModel = new NaiveBayes().fit(trainingData)
+
+    val predictions: DataFrame = model.transform(testData)
+    predictions.show(false)
+
+    val evaluator: MulticlassClassificationEvaluator = new MulticlassClassificationEvaluator().setLabelCol("label").setPredictionCol("predictions").setMetricName("accuracy")
+    println(s"Test Error: ${1 - evaluator.evaluate(predictions)}")
   }
 
 }
