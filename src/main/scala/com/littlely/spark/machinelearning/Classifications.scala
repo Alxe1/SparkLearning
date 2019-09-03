@@ -2,7 +2,7 @@ package com.littlely.spark.machinelearning
 
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.{Pipeline, PipelineModel}
-import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier, LogisticRegression, LogisticRegressionModel, RandomForestClassificationModel, RandomForestClassifier}
+import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier, GBTClassificationModel, GBTClassifier, LogisticRegression, LogisticRegressionModel, MultilayerPerceptronClassificationModel, MultilayerPerceptronClassifier, RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, StringIndexerModel, VectorIndexer, VectorIndexerModel}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
@@ -16,7 +16,7 @@ object Classifications {
     val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
 
     val classifications: Classifications = new Classifications(spark)
-    classifications.getRandomForestClassifier()
+    classifications.getMultiPerceptronClassifier()
   }
 }
 
@@ -133,6 +133,57 @@ class Classifications(spark : SparkSession){
 
     val rfModel: RandomForestClassificationModel = model.stages(2).asInstanceOf[RandomForestClassificationModel]
     println("Learned classification: \n" + rfModel.toDebugString)
+  }
+
+  // GBTClassifier
+  def getGBTClassifier(): Unit ={
+    // load data from hdfs
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_libsvm_data.txt")
+
+    val labelIndexer: StringIndexerModel = new StringIndexer().setInputCol("label").setOutputCol("indexedLabel").fit(data)
+    val featureIndexer: VectorIndexerModel = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(4).fit(data)
+
+
+    val Array(trainingData, testData): Array[Dataset[Row]] = data.randomSplit(Array(0.7, 0.3))
+
+    val gbt: GBTClassifier = new GBTClassifier().setLabelCol("indexedLabel").setFeaturesCol("indexedFeatures").setMaxIter(10)
+
+    val labelConverter: IndexToString = new IndexToString().setInputCol("prediction").setOutputCol("predictedLabel").setLabels(labelIndexer.labels)
+
+    val pipeline: Pipeline = new Pipeline().setStages(Array(labelIndexer, featureIndexer, gbt, labelConverter))
+
+    val model: PipelineModel = pipeline.fit(trainingData)
+    val predictions: DataFrame = model.transform(testData)
+    predictions.show(5)
+
+    val evaluator: MulticlassClassificationEvaluator = new MulticlassClassificationEvaluator().setLabelCol("indexedLabel").setPredictionCol("prediction").setMetricName("accuracy")
+    val acc: Double = evaluator.evaluate(predictions)
+    println("Test Error: " + (1 - acc))
+
+    val gbtModel: GBTClassificationModel = model.stages(2).asInstanceOf[GBTClassificationModel]
+    println("learned classification GBT model: \n" + gbtModel.toDebugString)
+  }
+
+  // MultilayerPerceptronClassifier
+  def getMultiPerceptronClassifier(): Unit ={
+
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_multiclass_classification_data.txt")
+    data.show(5, false)
+
+    val splits: Array[Dataset[Row]] = data.randomSplit(Array(0.6, 0.4), seed = 1234L)
+    val train: Dataset[Row] = splits(0)
+    val test: Dataset[Row] = splits(1)
+
+    // 设定层，输入4层，中间为5和4层，最后输出为3层
+    val layers: Array[Int] = Array[Int](4, 5, 4, 3)
+
+    val trainer: MultilayerPerceptronClassifier = new MultilayerPerceptronClassifier().setLayers(layers).setBlockSize(128).setSeed(1234L).setMaxIter(100)
+    val model: MultilayerPerceptronClassificationModel = trainer.fit(train)
+
+    val result: DataFrame = model.transform(test)
+//    val predictionAndLabels: DataFrame = result.select("prediction", "label")
+    val evaluator: MulticlassClassificationEvaluator = new MulticlassClassificationEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("accuracy")
+    println("Test set Accuracy: " + evaluator.evaluate(result))
   }
 
 }
