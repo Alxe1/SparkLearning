@@ -70,6 +70,7 @@ class Classifications(spark : SparkSession){
         println(s"($features, $label) -> prob=$prob, prediction=$prediction")}
   }
 
+  // DecisionTreeClassifer
   def getDecisionTreeClassifer(): Unit ={
     // load data from hdfs
     val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_libsvm_data.txt")
