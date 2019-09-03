@@ -2,7 +2,7 @@ package com.littlely.spark.machinelearning
 
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.{Pipeline, PipelineModel}
-import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier, LogisticRegression, LogisticRegressionModel}
+import org.apache.spark.ml.classification.{DecisionTreeClassificationModel, DecisionTreeClassifier, LogisticRegression, LogisticRegressionModel, RandomForestClassificationModel, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{IndexToString, StringIndexer, StringIndexerModel, VectorIndexer, VectorIndexerModel}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
@@ -16,7 +16,7 @@ object Classifications {
     val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
 
     val classifications: Classifications = new Classifications(spark)
-    classifications.getDecisionTreeClassifer()
+    classifications.getRandomForestClassifier()
   }
 }
 
@@ -103,6 +103,36 @@ class Classifications(spark : SparkSession){
     // model.stages(2) means the second stage of model: dt
     val treeModel: DecisionTreeClassificationModel = model.stages(2).asInstanceOf[DecisionTreeClassificationModel]
     println("Learned classification tree model: " + treeModel.toDebugString)
-
   }
+
+  // RandomForestClassifier
+  def getRandomForestClassifier(): Unit ={
+
+    // load data from hdfs
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_libsvm_data.txt")
+
+    val labelIndexer: StringIndexerModel = new StringIndexer().setInputCol("label").setOutputCol("indexedLabel").fit(data)
+    val featureIndexer: VectorIndexerModel = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(4).fit(data)
+
+    val Array(trainingData, testData): Array[Dataset[Row]] = data.randomSplit(Array(0.7, 0.3))
+
+    val rf: RandomForestClassifier = new RandomForestClassifier().setLabelCol("indexedLabel").setFeaturesCol("indexedFeatures").setNumTrees(10)
+
+    val labelConverter: IndexToString = new IndexToString().setInputCol("prediction").setOutputCol("predictedLabel").setLabels(labelIndexer.labels)
+
+    val pipeline: Pipeline = new Pipeline().setStages(Array(labelIndexer, featureIndexer, rf, labelConverter))
+
+    val model: PipelineModel = pipeline.fit(trainingData)
+
+    val predictions: DataFrame = model.transform(testData)
+    predictions.show(5)
+
+    val evaluator: MulticlassClassificationEvaluator = new MulticlassClassificationEvaluator().setLabelCol("indexedLabel").setPredictionCol("prediction").setMetricName("accuracy")
+    val acc: Double = evaluator.evaluate(predictions)
+    println("Test Error: " + (1.0 - acc))
+
+    val rfModel: RandomForestClassificationModel = model.stages(2).asInstanceOf[RandomForestClassificationModel]
+    println("Learned classification: \n" + rfModel.toDebugString)
+  }
+
 }
