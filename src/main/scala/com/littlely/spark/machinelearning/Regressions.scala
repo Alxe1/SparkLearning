@@ -3,10 +3,11 @@ package com.littlely.spark.machinelearning
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.{Pipeline, PipelineModel}
 import org.apache.spark.ml.classification.LogisticRegression
-import org.apache.spark.ml.feature.{HashingTF, Tokenizer}
+import org.apache.spark.ml.evaluation.RegressionEvaluator
+import org.apache.spark.ml.feature.{HashingTF, Tokenizer, VectorIndexer, VectorIndexerModel}
 import org.apache.spark.ml.linalg.Vector
-
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.ml.regression.{DecisionTreeRegressionModel, DecisionTreeRegressor, GeneralizedLinearRegression, GeneralizedLinearRegressionModel, GeneralizedLinearRegressionTrainingSummary, LinearRegression, LinearRegressionModel, LinearRegressionTrainingSummary, RandomForestRegressionModel, RandomForestRegressor}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
 object Regressions {
 
@@ -15,20 +16,104 @@ object Regressions {
     val conf: SparkConf = new SparkConf().setMaster("local[*]").setAppName("Regression")
     val spark: SparkSession = SparkSession.builder().config(conf).getOrCreate()
 
-    //    val testReg: TestRegression = new TestRegression(spark)
-    //    testReg.getLogisticRegression()
-
-    //测试pipeline
-    val testPipeline: TestPipeline = new TestPipeline(spark)
-    testPipeline.getPipeline()
+    val regressions = new Regressions(spark)
+    regressions.getRandomForestRegression()
 
   }
 
 }
 
-class TestRegression(spark : SparkSession){
+class Regressions(spark : SparkSession){
 
+  def getLinearRegression(): Unit ={
 
+    val training: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_linear_regression_data.txt")
+    training.show(5, false)
+
+    val lr: LinearRegression = new LinearRegression().setMaxIter(20).setRegParam(0.3).setElasticNetParam(0.8)
+    val lrModel: LinearRegressionModel = lr.fit(training)
+    println(s"Coefficients: ${lrModel.coefficients} Intercept: ${lrModel.intercept}")
+
+    // Summarize the model
+    val trainingSummary: LinearRegressionTrainingSummary = lrModel.summary
+    println(s"numIterations: ${trainingSummary.totalIterations}")
+    println(s"objectiveHistory: [${trainingSummary.objectiveHistory.mkString("," )}]")
+    trainingSummary.residuals.show()
+    println(s"p Value: ${trainingSummary.pValues}")
+    println(s"RMSE: ${trainingSummary.rootMeanSquaredError}")
+    println(s"r2: ${trainingSummary.r2}")
+  }
+
+  def getGeneralizedLinearRegression(): Unit ={
+
+    val training: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_linear_regression_data.txt")
+    training.show(5, false)
+
+    val glr: GeneralizedLinearRegression = new GeneralizedLinearRegression().setFamily("gaussian").setLink("identity").setMaxIter(10).setRegParam(0.3)
+    val model: GeneralizedLinearRegressionModel = glr.fit(training)
+    println(s"Coefficients: ${model.coefficients}")
+    println(s"Intercept: ${model.intercept}")
+
+    val summary: GeneralizedLinearRegressionTrainingSummary = model.summary
+
+    println(s"Coefficient Standard Error: ${summary.coefficientStandardErrors.mkString(",")}")
+    println(s"T values: ${summary.tValues.mkString(",")}")
+    println(s"P values: ${summary.pValues.mkString(",")}")
+    println(s"Dispersion: ${summary.dispersion}")
+    println(s"Null Deviance: ${summary.nullDeviance}")
+    println(s"Residual Degree Of Freedom Null: ${summary.residualDegreeOfFreedomNull}")
+    println(s"Deviance: ${summary.deviance}")
+    println(s"Residual Degree Of Freedom: ${summary.residualDegreeOfFreedom}")
+    println(s"AIC: ${summary.aic}")
+    println("Deviance Residuals: ")
+    summary.residuals().show()
+  }
+
+  def getDecisionTreeRegression(): Unit ={
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_libsvm_data.txt")
+    data.show(5, false)
+
+    val featureIndexer: VectorIndexerModel = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(4).fit(data)
+    val Array(trainingData, testData): Array[Dataset[Row]] = data.randomSplit(Array(0.7, 0.3))
+
+    val dt: DecisionTreeRegressor = new DecisionTreeRegressor().setLabelCol("label").setFeaturesCol("indexedFeatures")
+
+    val pipeline: Pipeline = new Pipeline().setStages(Array(featureIndexer, dt))
+    val model: PipelineModel = pipeline.fit(trainingData)
+
+    val predictions: DataFrame = model.transform(testData)
+    predictions.show(5, false)
+
+    val evaluator: RegressionEvaluator = new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse")
+    val rmse: Double = evaluator.evaluate(predictions)
+    println("Root Mean Squared Error(RMSE) on test data = " + rmse)
+
+    val treeModel: DecisionTreeRegressionModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
+    println("Learned regression tree model: \n" + treeModel.toDebugString)
+  }
+
+  def getRandomForestRegression(): Unit ={
+    val data: DataFrame = spark.read.format("libsvm").load("hdfs://centos03:9000/spark-data/mllib/sample_libsvm_data.txt")
+    data.show(5, false)
+
+    val featureIndexer: VectorIndexerModel = new VectorIndexer().setInputCol("features").setOutputCol("indexedFeatures").setMaxCategories(4).fit(data)
+    val Array(trainingData, testData): Array[Dataset[Row]] = data.randomSplit(Array(0.7, 0.3))
+
+    val rf: RandomForestRegressor = new RandomForestRegressor().setLabelCol("label").setFeaturesCol("indexedFeatures")
+
+    val pipeline: Pipeline = new Pipeline().setStages(Array(featureIndexer, rf))
+    val model: PipelineModel = pipeline.fit(trainingData)
+
+    val predictions: DataFrame = model.transform(testData)
+    predictions.show(5, false)
+
+    val evaluator: RegressionEvaluator = new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction").setMetricName("rmse")
+    val rmse: Double = evaluator.evaluate(predictions)
+    println("RMSE ON TEST DATA: " + rmse)
+
+    val rfModel = model.stages(1).asInstanceOf[RandomForestRegressionModel]
+    println("Learned regression forest model:\n" + rfModel.toDebugString)
+  }
 }
 
 
