@@ -14,10 +14,6 @@ object BaseOps {
     val text: RDD[String] = sc.textFile("file:///F:\\java_program\\Sparks\\src\\main\\scala\\sample\\hello.txt") // hdfs://centos03:9000/sample/hello.txt
     val rdd: RDD[(String, Int)] = sc.parallelize(List(("a", 3), ("a", 2), ("c", 4), ("b", 3), ("c", 6), ("c", 8)), 2)
 
-    // word count
-//    val wordCount: WordCount = new WordCount
-//    wordCount.wordCount(text)
-
     val maxAdd: MaxValueAdd = new MaxValueAdd
     maxAdd.getMaxValueAdd(rdd)
 
