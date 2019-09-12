@@ -4,7 +4,9 @@ import java.util
 
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.attribute.{Attribute, AttributeGroup, NumericAttribute}
-import org.apache.spark.ml.feature.{Binarizer, BucketedRandomProjectionLSH, BucketedRandomProjectionLSHModel, ChiSqSelector, CountVectorizer, CountVectorizerModel, HashingTF, IDF, IDFModel, NGram, Normalizer, PCA, PCAModel, RegexTokenizer, StopWordsRemover, Tokenizer, VectorSlicer, Word2Vec, Word2VecModel}
+import org.apache.spark.ml.feature.{Binarizer, BucketedRandomProjectionLSH, BucketedRandomProjectionLSHModel, ChiSqSelector,
+  CountVectorizer, CountVectorizerModel, HashingTF, IDF, IDFModel, NGram, Normalizer, PCA, PCAModel, RegexTokenizer,
+  StopWordsRemover, Tokenizer, VectorSlicer, Word2Vec, Word2VecModel}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.sql.expressions.UserDefinedFunction

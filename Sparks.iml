@@ -87,7 +87,6 @@
     <orderEntry type="library" name="Maven: org.apache.spark:spark-launcher_2.11:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.spark:spark-network-common_2.11:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.fusesource.leveldbjni:leveldbjni-all:1.8" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.6.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.spark:spark-network-shuffle_2.11:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.spark:spark-unsafe_2.11:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jets3t:jets3t:0.7.1" level="project" />
@@ -144,8 +143,6 @@
     <orderEntry type="library" name="Maven: io.dropwizard.metrics:metrics-jvm:3.1.2" level="project" />
     <orderEntry type="library" name="Maven: io.dropwizard.metrics:metrics-json:3.1.2" level="project" />
     <orderEntry type="library" name="Maven: io.dropwizard.metrics:metrics-graphite:3.1.2" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.6.5" level="project" />
-    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.6.5" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.module:jackson-module-scala_2.11:2.6.5" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.module:jackson-module-paranamer:2.6.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.ivy:ivy:2.4.0" level="project" />
@@ -200,5 +197,8 @@
     <orderEntry type="library" name="Maven: com.typesafe.akka:akka-actor_2.12:2.5.19" level="project" />
     <orderEntry type="library" name="Maven: com.typesafe:config:1.3.3" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-java8-compat_2.12:0.8.0" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.8" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
+    <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.8" level="project" />
   </component>
 </module>
