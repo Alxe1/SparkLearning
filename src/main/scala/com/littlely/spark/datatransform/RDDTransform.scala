@@ -4,6 +4,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.apache.spark.SparkConf
 
+import scala.collection.mutable
+
 
 case class User(id : Int, name : String, age : Int)
 
@@ -21,14 +23,18 @@ object RDDTransform {
     val rdd: RDD[(Int, String, Int)] = spark.sparkContext.makeRDD(List((1, "zhangs", 20), (2, "lis", 30), (3, "wangw", 40)))
     // RDD转换为DF(需要有结构)
     val df: DataFrame = rdd.toDF("id", "name", "age")
+    df.show()
     // DF转换为DS(需要有类型)
     val ds: Dataset[User] = df.as[User]
+    ds.show()
     // DS转换为DF
-    val df1: DataFrame = ds.toDF()
+    val df1: DataFrame = ds.toDF("id", "name", "age")
     // DF转换为RDD
     val rdd1: RDD[Row] = df1.rdd
+    rdd1.collect().foreach(println)
     // DS转换为RDD
     val rdd2: RDD[User] = ds.rdd
+    rdd2.collect().foreach(println)
 
     println("rdd1:\n")
     rdd1.foreach(row => {println(row.getString(1))})

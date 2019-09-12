@@ -3,7 +3,9 @@ package com.littlely.spark.baseops
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
 
-
+/**
+  * 聚合函数
+  */
 object BaseOps {
 
   def main(args: Array[String]): Unit = {
@@ -31,7 +33,7 @@ class WordCount{
     val reduceRDD: RDD[(String, Int)] = mapRDD.reduceByKey(_+_)
     val result: RDD[(String, Int)] = reduceRDD.sortByKey(false)
     result.foreach(println)
-    // 可以一行代码
+    // 可以一行代码搞定
 //    text.flatMap(_.split(" ")).map((_, 1)).reduceByKey(_+_).sortByKey(false).foreach(println)
   }
 }

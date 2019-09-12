@@ -23,6 +23,7 @@
           <root url="file://D:/spark-2.1.1-bin-hadoop2.7/jars" />
           <root url="jar://D:/spark-2.1.1-bin-hadoop2.7/jars/spark-mllib_2.11-2.1.1.jar!/" />
           <root url="jar://$MAVEN_REPOSITORY$/org/apache/spark/spark-mllib_2.11/2.1.1/spark-mllib_2.11-2.1.1.jar!/" />
+          <root url="file://D:/spark-2.1.1/streaming/src/main/scala" />
         </SOURCES>
         <jarDirectory url="file://D:/spark-2.1.1-bin-hadoop2.7/jars" recursive="false" />
         <jarDirectory url="file://D:/spark-2.1.1-bin-hadoop2.7/jars" recursive="false" type="SOURCES" />
@@ -183,9 +184,9 @@
     <orderEntry type="library" name="Maven: org.jpmml:pmml-model:1.2.15" level="project" />
     <orderEntry type="library" name="Maven: org.jpmml:pmml-schema:1.2.15" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.jmockit:jmockit:1.34" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.kafka:kafka-clients:2.1.1" level="project" />
-    <orderEntry type="library" name="Maven: com.github.luben:zstd-jni:1.3.7-1" level="project" />
-    <orderEntry type="library" name="Maven: org.lz4:lz4-java:1.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.kafka:kafka-clients:0.10.2.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.spark:spark-streaming-kafka-0-10_2.11:2.1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.spark:spark-sql-kafka-0-10_2.11:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.kafka:kafka_2.11:2.1.1" level="project" />
     <orderEntry type="library" name="Maven: net.sf.jopt-simple:jopt-simple:5.0.4" level="project" />
     <orderEntry type="library" name="Maven: com.yammer.metrics:metrics-core:2.2.0" level="project" />
@@ -196,5 +197,8 @@
     <orderEntry type="library" name="Maven: org.apache.yetus:audience-annotations:0.5.0" level="project" />
     <orderEntry type="library" name="Maven: junit:junit:4.12" level="project" />
     <orderEntry type="library" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe.akka:akka-actor_2.12:2.5.19" level="project" />
+    <orderEntry type="library" name="Maven: com.typesafe:config:1.3.3" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang.modules:scala-java8-compat_2.12:0.8.0" level="project" />
   </component>
 </module>
